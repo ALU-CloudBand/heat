@@ -50,9 +50,14 @@ class Workflow(signal_responder.SignalResponder,
     ) = (
         'name', 'description', 'on_error', 'on_complete', 'on_success',
         'action', 'workflow', 'publish', 'input', 'requires', 'retry',
-        'wait-before', 'wait-after', 'pause-before', 'timeout',
-        'with-items', 'keep-result', 'target'
+        'wait_before', 'wait_after', 'pause_before', 'timeout',
+        'with_items', 'keep_result', 'target'
     )
+
+    _TASKS_TASK_DEFAULTS = [
+        ON_ERROR, ON_COMPLETE, ON_SUCCESS,
+        REQUIRES, RETRY, WAIT_BEFORE, WAIT_AFTER, PAUSE_BEFORE, TIMEOUT
+    ]
 
     _SIGNAL_DATA_KEYS = (
         SIGNAL_DATA_INPUT, SIGNAL_DATA_PARAMS
@@ -104,8 +109,8 @@ class Workflow(signal_responder.SignalResponder,
         OUTPUT: properties.Schema(
             properties.Schema.MAP,
             _('Any data structure arbitrarily containing YAQL '
-              'expressions that defines workflow output. '
-              'May be nested.'),
+              'expressions that defines workflow output. May be '
+              'nested.'),
             update_allowed=True
         ),
         PARAMS: properties.Schema(
@@ -115,65 +120,61 @@ class Workflow(signal_responder.SignalResponder,
             update_allowed=True
         ),
         TASK_DEFAULTS: properties.Schema(
-            properties.Schema.LIST,
+            properties.Schema.MAP,
             _("Default settings for some of task "
               "attributes defined "
               "at workflow level."),
-            schema=properties.Schema(
-                properties.Schema.MAP,
-                schema={
-                    ON_SUCCESS: properties.Schema(
-                        properties.Schema.LIST,
-                        _('List of tasks which will run after '
-                          'the task has completed successfully.')
-                    ),
-                    ON_ERROR: properties.Schema(
-                        properties.Schema.LIST,
-                        _('List of tasks which will run after '
-                          'the task has completed with an error.')
-                    ),
-                    ON_COMPLETE: properties.Schema(
-                        properties.Schema.LIST,
-                        _('List of tasks which will run after '
-                          'the task has completed regardless of whether '
-                          'it is successful or not.')
-                    ),
-                    REQUIRES: properties.Schema(
-                        properties.Schema.LIST,
-                        _('List of tasks which should be executed before '
-                          'this task. Used only in reverse workflows.')
-                    ),
-                    RETRY: properties.Schema(
-                        properties.Schema.MAP,
-                        _('Defines a pattern how task should be repeated in '
-                          'case of an error.')
-                    ),
-                    WAIT_BEFORE: properties.Schema(
-                        properties.Schema.INTEGER,
-                        _('Defines a delay in seconds that Mistral Engine'
-                          ' should wait before starting a task.')
-                    ),
-                    WAIT_AFTER: properties.Schema(
-                        properties.Schema.INTEGER,
-                        _('Defines a delay in seconds that Mistral Engine'
-                          ' should wait after a task has completed before'
-                          ' starting next tasks defined in '
-                          'on-success, on-error or on-complete.')
-                    ),
-                    PAUSE_BEFORE: properties.Schema(
-                        properties.Schema.BOOLEAN,
-                        _('Defines whether Mistral Engine should put the '
-                          'workflow on hold or not before starting a task')
-                    ),
-                    TIMEOUT: properties.Schema(
-                        properties.Schema.INTEGER,
-                        _('Defines a period of time in seconds after which '
-                          'a task will be failed automatically '
-                          'by engine if hasn\'t completed.')
-                    ),
-                }
-
-            ),
+            schema={
+                ON_SUCCESS: properties.Schema(
+                    properties.Schema.LIST,
+                    _('List of tasks which will run after '
+                      'the task has completed successfully.')
+                ),
+                ON_ERROR: properties.Schema(
+                    properties.Schema.LIST,
+                    _('List of tasks which will run after '
+                      'the task has completed with an error.')
+                ),
+                ON_COMPLETE: properties.Schema(
+                    properties.Schema.LIST,
+                    _('List of tasks which will run after '
+                      'the task has completed regardless of whether '
+                      'it is successful or not.')
+                ),
+                REQUIRES: properties.Schema(
+                    properties.Schema.LIST,
+                    _('List of tasks which should be executed before '
+                      'this task. Used only in reverse workflows.')
+                ),
+                RETRY: properties.Schema(
+                    properties.Schema.MAP,
+                    _('Defines a pattern how task should be repeated in '
+                      'case of an error.')
+                ),
+                WAIT_BEFORE: properties.Schema(
+                    properties.Schema.INTEGER,
+                    _('Defines a delay in seconds that Mistral Engine'
+                      ' should wait before starting a task.')
+                ),
+                WAIT_AFTER: properties.Schema(
+                    properties.Schema.INTEGER,
+                    _('Defines a delay in seconds that Mistral Engine'
+                      ' should wait after a task has completed before'
+                      ' starting next tasks defined in '
+                      'on-success, on-error or on-complete.')
+                ),
+                PAUSE_BEFORE: properties.Schema(
+                    properties.Schema.BOOLEAN,
+                    _('Defines whether Mistral Engine should put the '
+                      'workflow on hold or not before starting a task')
+                ),
+                TIMEOUT: properties.Schema(
+                    properties.Schema.INTEGER,
+                    _('Defines a period of time in seconds after which '
+                      'a task will be failed automatically '
+                      'by engine if hasn\'t completed.')
+                ),
+            },
             update_allowed=True
         ),
         TASKS: properties.Schema(
@@ -425,6 +426,11 @@ class Workflow(signal_responder.SignalResponder,
         definition[defn_name][self.TASKS] = {}
         for task in self.build_tasks(props):
             definition.get(defn_name).get(self.TASKS).update(task)
+
+        if props.get(self.TASK_DEFAULTS) is not None:
+            definition[defn_name][self.TASK_DEFAULTS.replace('_', '-')] = {
+                k.replace('_', '-'): v for k, v in
+                six.iteritems(props.get(self.TASK_DEFAULTS)) if v}
 
         return yaml.dump(definition, Dumper=yaml.CSafeDumper
                          if hasattr(yaml, 'CSafeDumper')
