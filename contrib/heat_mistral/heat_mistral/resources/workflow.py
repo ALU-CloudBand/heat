@@ -53,7 +53,7 @@ class Workflow(signal_responder.SignalResponder,
         'name', 'description', 'on_error', 'on_complete', 'on_success',
         'action', 'workflow', 'publish', 'input', 'requires', 'retry',
         'wait_before', 'wait_after', 'pause_before', 'timeout',
-        'with_items', 'keep_result', 'target'
+        'with_items', 'keep_result', 'target', 'join'
     )
 
     _TASKS_TASK_DEFAULTS = [
