@@ -1,3 +1,5 @@
+        'wait_before', 'wait_after', 'pause_before', 'timeout',
+        'with_items', 'keep_result', 'target', 'join'
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -46,7 +48,7 @@ class Workflow(signal_responder.SignalResponder,
         TASK_NAME, TASK_DESCRIPTION, ON_ERROR, ON_COMPLETE, ON_SUCCESS,
         ACTION, WORKFLOW, PUBLISH, TASK_INPUT, REQUIRES, RETRY,
         WAIT_BEFORE, WAIT_AFTER, PAUSE_BEFORE, TIMEOUT,
-        WITH_ITEMS, KEEP_RESULT, TARGET
+        WITH_ITEMS, KEEP_RESULT, TARGET, JOIN
     ) = (
         'name', 'description', 'on_error', 'on_complete', 'on_success',
         'action', 'workflow', 'publish', 'input', 'requires', 'retry',
@@ -280,6 +282,10 @@ class Workflow(signal_responder.SignalResponder,
                         properties.Schema.STRING,
                         _('It defines an executor to which task action '
                           'should be sent to.')
+                    ),
+                    JOIN: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Allows to synchronize multiple parallel workflow branches and aggregate their data.')
                     ),
                 },
             ),
